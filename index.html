@@ -40,8 +40,6 @@
             background-color: oklch(var(--pf, var(--p)));
             color: oklch(var(--pc, var(--b1)));
         }
-
-        
     </style>
 </head>
 
@@ -69,8 +67,11 @@
                     </svg>
                     <div>
                         <div class="font-bold">如何使用？</div>
-                        <p class="text-sm">只需 <span class="font-semibold">3 分钟</span> 回复 13 个简短问题，即可判断该任务是否值得引入 AI
-                            工作流，并立刻获得可执行的下一步行动建议。</p>
+                        <p class="text-sm">
+                            只需 3分钟 回复 <span class="font-semibold" x-text="questions.length + ' 个简短问题'"></span>，
+                            即可判断该任务是否值得引入 AI 工作流，并立刻获得可执行的下一步行动建议。
+                        </p>
+
                     </div>
                 </div>
 
@@ -125,7 +126,6 @@
                                 <button
                                     class="btn justify-start items-center text-left h-auto py-2.5 whitespace-normal break-words w-full"
                                     :class="isSelected(qi, oi) ? 'btn-primary text-white' : 'btn-outline btn-neutral'"
-
                                     @click="setAnswer(qi, oi, opt)" type="button">
                                     <span x-text="opt.text" class="flex-grow"></span>
                                     <!-- 选项内提示 -->
@@ -338,17 +338,6 @@
                             { text: '是，数量大且频繁', percent: 100, advice: '高频任务更适合自动化，可提升效率。' },
                             { text: '中等，可预期', percent: 50 },
                             { text: '少量或偶发', percent: -30, advice: '低频任务自动化 ROI 可能较低，谨慎投入，人工使用 AI 工具组合完成。' }
-                        ]
-                    },
-                    {
-                        weight: 1,
-                        text: '该任务的总体工作量如何？',
-                        example: '每天处理 1 000+ 订单（工作量大） vs. 每月偶尔手动调整一次报表（工作量小）',
-                        tip: '工作量越大，自动化节省的人力成本和 ROI 越高',
-                        options: [
-                            { text: '工作量非常大，全年持续高负荷', percent: 100, advice: '高工作量任务适合优先自动化，节省人力。' },
-                            { text: '中等，可预期', percent: 50 },
-                            { text: '很小或偶发', percent: -30, advice: '工作量小，自动化投入产出比可能不高，需谨慎评估。' }
                         ]
                     },
                     {
