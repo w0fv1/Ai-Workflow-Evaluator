@@ -3,7 +3,11 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>AI工作流 适用性评估工具</title>
+    <!-- 为移动端友好添加 viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 工作流适用性评估工具（快速自测）</title>
+
+    <!-- Alpine.js 3.x -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- ====================================================================
@@ -36,6 +40,8 @@
             background-color: oklch(var(--pf, var(--p)));
             color: oklch(var(--pc, var(--b1)));
         }
+
+        
     </style>
 </head>
 
@@ -49,7 +55,10 @@
             x-init="$watch('answers', () => progress = Math.round((answeredCount / questions.length) * 100))">
 
             <div class="card-body gap-y-6 lg:gap-y-8">
-                <div class="text-3xl font-extrabold tracking-wide text-center mb-2">AI 适用性快速自测</div>
+                <!-- 组件标题 -->
+                <div class="text-3xl font-extrabold tracking-wide text-center mb-2">
+                    AI 工作流适用性评估 · <span class="whitespace-nowrap">快速自测</span>
+                </div>
 
                 <!-- ===================== 使用说明 ===================== -->
                 <div class="alert alert-info shadow-md">
@@ -59,12 +68,13 @@
                             d="M13 16h-1v-4h-1m1-4h.01M12 18a9 9 0 110-18 9 9 0 010 18z" />
                     </svg>
                     <div>
-                        <div class="font-bold">怎么用？</div>
-                        <p class="text-sm">花 3 分钟回答 13 个问题，判断这份工作是否值得让 AI工作流 来做，并获得下一步建议。</p>
+                        <div class="font-bold">如何使用？</div>
+                        <p class="text-sm">只需 <span class="font-semibold">3 分钟</span> 回复 13 个简短问题，即可判断该任务是否值得引入 AI
+                            工作流，并立刻获得可执行的下一步行动建议。</p>
                     </div>
                 </div>
 
-                <!-- ===================== 案例按钮列表（新增） ===================== -->
+                <!-- ===================== 案例按钮列表 ===================== -->
                 <div class="flex flex-wrap justify-center gap-2 my-2">
                     <!-- 为每个 sample 生成一个按钮 -->
                     <template x-for="(s, si) in samples" :key="'sample-btn-' + si">
@@ -83,11 +93,11 @@
                 <div class="form-control">
                     <label class="label pb-1" for="jobDescription">
                         <span class="label-text text-base font-semibold">
-                            <span class="opacity-75 mr-1">首先</span>请简述您希望评估的工作任务（尽可能详细）
+                            <span class="opacity-75 mr-1">第一步 ·</span>请 <span class="font-bold">简要且具体</span> 描述您要评估的工作任务
                         </span>
                     </label>
                     <textarea id="jobDescription"
-                        class="textarea textarea-bordered h-24 placeholder:text-base-content/50"
+                        class="textarea textarea-bordered h-28 placeholder:text-base-content/50"
                         placeholder="例如：审核客户提交的发票信息，并根据预设规则生成内部付款指令单据。" x-model="description"></textarea>
                 </div>
 
@@ -114,7 +124,8 @@
                             <template x-for="(opt, oi) in q.options" :key="'opt-' + qi + '-' + oi">
                                 <button
                                     class="btn justify-start items-center text-left h-auto py-2.5 whitespace-normal break-words w-full"
-                                    :class="isSelected(qi, oi) ? 'btn-primary text-base-100' : 'btn-outline btn-neutral'"
+                                    :class="isSelected(qi, oi) ? 'btn-primary text-white' : 'btn-outline btn-neutral'"
+
                                     @click="setAnswer(qi, oi, opt)" type="button">
                                     <span x-text="opt.text" class="flex-grow"></span>
                                     <!-- 选项内提示 -->
@@ -125,7 +136,7 @@
                                     <!-- 分数显示（调试用）-->
                                     <template x-if="showScore">
                                         <span class="badge badge-ghost badge-sm ml-2 shrink-0"
-                                            x-text="opt.score >= 0 ? `+${opt.score}` : opt.score"></span>
+                                            x-text="`${opt.percent}%`"></span>
                                     </template>
                                 </button>
                             </template>
@@ -133,13 +144,13 @@
                     </div>
                 </template>
 
-                <!-- ===================== 操作按钮（移除了单独填充案例按钮） ===================== -->
+                <!-- ===================== 操作按钮 ===================== -->
                 <div class="flex flex-wrap gap-4 justify-end pt-4">
                     <button class="btn btn-primary min-w-[8rem]"
                         @click="evaluate(); $nextTick(()=>{ $el.scrollIntoView({behavior:'smooth',block:'center'}); })"
-                        :disabled="!isAllAnswered">生成评估</button>
+                        :disabled="!isAllAnswered">生成评估报告</button>
                     <button class="btn btn-ghost min-w-[6rem]"
-                        @click="if(window.confirm('确定要重置所有已填写的内容吗？')) reset()">重置</button>
+                        @click="if(window.confirm('确定要重置所有已填写的内容吗？')) reset()">重新开始</button>
                 </div>
 
                 <!-- ===================== 评估结果卡片 ===================== -->
@@ -155,7 +166,7 @@
 
                         <div class="divider divider-neutral opacity-50 my-3"></div>
 
-                        <div class="font-semibold">下一步推荐：</div>
+                        <div class="font-semibold">行动建议：</div>
                         <p class="whitespace-pre-line text-base-content/90" x-text="suggestion"></p>
 
                         <template x-if="selectedAdvices.length">
@@ -184,220 +195,229 @@
                 /* ---------- 调试开关 ---------- */
                 showScore: false,
 
-                /* ---------- 可一键注入的案例列表（新增多个） ---------- */
+                /* ---------- 可一键注入的案例列表（含负面示例） ---------- */
                 samples: [
                     {
                         name: '发票审核自动化',
                         description: '审核客户提交的发票信息，并根据预设规则生成内部付款指令单据。',
                         selectedIdx: [
-                            /* 0 */ 0, // 标准流程
-                            /* 1 */ 1, // 错误影响一般
-                            /* 2 */ 0, // 创意不需要
-                            /* 3 */ 0, // 结构化输入
-                            /* 4 */ 1, // 接 1–2 个系统
-                            /* 5 */ 0, // 无物理操作
-                            /* 6 */ 0, // 无客户沟通
-                            /* 7 */ 0, // 法律风险低
-                            /* 8 */ 0, // 数量大频繁
-                            /* 9 */ 0, // 工作量大
-                            /* 10 */ 1, // 500–2000 字
-                            /* 11 */ 1, // 一般内部数据
-                            /* 12 */ 1  // 文字+表格
+                            /* 0 */ 0, /* 1 */ 1, /* 2 */ 0, /* 3 */ 0, /* 4 */ 1, /* 5 */ 0, /* 6 */ 0, /* 7 */ 0,
+                            /* 8 */ 0, /* 9 */ 0, /* 10 */ 1, /* 11 */ 1, /* 12 */ 1
                         ]
                     },
                     {
                         name: '热线客服回复助手',
                         description: '处理常见客户来电/聊天咨询，并生成 FAQ 式自动回复草稿，供客服确认后发送。',
                         selectedIdx: [
-                            /* 0 */ 1, // 一半重复
-                            /* 1 */ 1, // 错误影响一般
-                            /* 2 */ 1, // 偶尔需要创意
-                            /* 3 */ 1, // 部分结构化
-                            /* 4 */ 1, // 接 1–2 系统
-                            /* 5 */ 0, // 无物理操作
-                            /* 6 */ 2, // 经常客户沟通
-                            /* 7 */ 1, // 法律风险中等
-                            /* 8 */ 0, // 数量大
-                            /* 9 */ 0, // 工作量大
-                            /* 10 */ 0, // < 500 字
-                            /* 11 */ 1, // 一般内部数据
-                            /* 12 */ 0  // 纯文字
+                            /* 0 */ 1, /* 1 */ 1, /* 2 */ 1, /* 3 */ 1, /* 4 */ 1, /* 5 */ 0, /* 6 */ 2, /* 7 */ 1,
+                            /* 8 */ 0, /* 9 */ 0, /* 10 */ 0, /* 11 */ 1, /* 12 */ 0
                         ]
                     },
                     {
                         name: '品牌广告脚本创作',
                         description: '根据产品需求撰写 30 秒品牌广告脚本，强调创意与情感共鸣。',
                         selectedIdx: [
-                            /* 0 */ 2, // 非标准
-                            /* 1 */ 0, // 影响小
-                            /* 2 */ 2, // 高度创意
-                            /* 3 */ 1, // 部分结构化
-                            /* 4 */ 1, // 接 1–2 系统
-                            /* 5 */ 0, // 无物理操作
-                            /* 6 */ 0, // 无客户沟通
-                            /* 7 */ 1, // 法律风险中等
-                            /* 8 */ 1, // 频率中等
-                            /* 9 */ 1, // 工作量中等
-                            /* 10 */ 1, // 500–2000 字
-                            /* 11 */ 1, // 一般内部数据
-                            /* 12 */ 0  // 纯文字
+                            /* 0 */ 2, /* 1 */ 0, /* 2 */ 2, /* 3 */ 1, /* 4 */ 1, /* 5 */ 0, /* 6 */ 0, /* 7 */ 1,
+                            /* 8 */ 1, /* 9 */ 1, /* 10 */ 1, /* 11 */ 1, /* 12 */ 0
+                        ]
+                    },
+                    /* ------------------ 负面示例 1 ------------------ */
+                    {
+                        name: '罕见病 AI 自动诊断',
+                        description: '基于患者完整病例和影像数据，自动诊断罕见疾病并给出治疗方案。',
+                        selectedIdx: [
+                            2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2
+                        ]
+                    },
+                    /* ------------------ 负面示例 2 ------------------ */
+                    {
+                        name: '核电站冷却系统现场维修',
+                        description: '在核电站现场维护冷却系统的复杂机械设备，确保安全与合规。',
+                        selectedIdx: [
+                            1, 2, 1, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2
                         ]
                     }
                 ],
 
-                /* ---------- 题目与选项 ---------- */
+                /* ---------- 题目与选项 (新评分体系：weight + percent) ---------- */
                 questions: [
                     {
+                        weight: 1, // 题目满分权重（所有题目加起来 = 13，将在之后归一化）
                         text: '这项工作流程是否重复、标准？',
                         example: '批量数据录入（是，重复）；发票审核（是）／品牌口号创作（否）',
                         tip: '“标准化”指步骤固定、判断规则清晰的流程',
                         options: [
-                            { text: '是，几乎每次都一样', score: 20, advice: '可考虑完全自动化，此类流程最省力。' },
-                            { text: '一半重复，一半要人工判断', score: 5, advice: '先把重复部分交给 AI，把判断留给人工。' },
-                            { text: '否，每次情况都不同', score: -10 }
+                            { text: '是，几乎每次都一样', percent: 100, advice: '可考虑完全自动化，此类流程最省力。' },
+                            { text: '一半重复，一半要人工判断', percent: 50, advice: '先把重复部分交给 AI，把判断留给人工。' },
+                            { text: '否，每次情况都不同', percent: -50 }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '如果出错，影响大吗？',
                         example: '内部报表拼写错（影响小） vs. 银行付款金额错（影响大）',
                         tip: '影响越大，越需要人工把关',
                         options: [
-                            { text: '影响很小，可接受', score: 15 },
-                            { text: '影响一般，需要注意', score: 5 },
-                            { text: '影响重大，必须零失误', score: -15, advice: '建议保留人工复核或双人审批。' }
+                            { text: '影响很小，可接受', percent: 95 },
+                            { text: '影响一般，需要注意', percent: 50 },
+                            { text: '影响重大，必须零失误', percent: -50, advice: '建议保留人工复核或双人审批。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '这项工作要发挥创意吗？',
                         example: '会议纪要（不需创意） vs. 品牌广告脚本（需要创意）',
                         tip: '“创意”包括想象力、灵感、故事性等',
                         options: [
-                            { text: '几乎不需要创意', score: 15 },
-                            { text: '有时需要', score: 0 },
-                            { text: '高度依赖创意', score: -20, advice: 'AI 更适合作为灵感助手，而非完全取代。' }
+                            { text: '几乎不需要创意', percent: 100 },
+                            { text: '有时需要', percent: 30 },
+                            { text: '高度依赖创意', percent: -50, advice: 'AI 更适合作为灵感助手，而非完全取代。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '输入数据是否已是电子、结构化格式？',
                         example: 'CSV 表格（结构化） vs. 扫描手写单（非结构化）',
                         tip: '结构化 = 行列分明、机器易读取',
                         options: [
-                            { text: '是，非常易用', score: 20 },
-                            { text: '部分是，部分需整理', score: 5 },
-                            { text: '不是，且难整理', score: -10, advice: '先投入资源做数据清洗，再考虑 AI。' }
+                            { text: '是，非常易用', percent: 100 },
+                            { text: '部分是，部分需整理', percent: 50 },
+                            { text: '不是，且难整理', percent: -50, advice: '先投入资源做数据清洗，再考虑 AI。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '要同时对接很多系统吗？',
                         example: '要连 ERP、CRM、支付、邮件多个系统（是）',
                         tip: '系统越多，集成成本越高',
                         options: [
-                            { text: '是，需要接多个系统', score: -10, advice: '集成复杂度高，效果可能打折扣。' },
-                            { text: '偶尔接 1–2 个', score: 0 },
-                            { text: '否，只用一个系统', score: 5 }
+                            { text: '是，需要接多个系统', percent: -50, advice: '集成复杂度高，效果可能打折扣。' },
+                            { text: '偶尔接 1–2 个', percent: 30 },
+                            { text: '否，只用一个系统', percent: 100 }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '涉及实际物品或机器操作吗？',
                         example: '仓库分拣（需要） vs. 线上报表（不需要）',
-                        tip: '物理世界=机器人、物流、硬件按钮等',
+                        tip: '物理世界 = 机器人、物流、硬件按钮等',
                         options: [
-                            { text: '否，纯线上', score: 10 },
-                            { text: '少量物理操作', score: -15, advice: '可考虑机器人或传感器配合。' },
-                            { text: '大量物理操作', score: -35, advice: '与物理世界交互难度大，成本高。' }
+                            { text: '否，纯线上', percent: 100 },
+                            { text: '少量物理操作', percent: -25, advice: '可考虑机器人或传感器配合。' },
+                            { text: '大量物理操作', percent: -50, advice: '与物理世界交互难度大，成本高。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '会经常直接跟客户沟通吗？',
                         example: '热线客服（需要） vs. 后台对账（不需要）',
-                        tip: '直接沟通=语音、面对面、视频、直播等',
+                        tip: '直接沟通 = 语音、面对面、视频、直播等',
                         options: [
-                            { text: '否，完全内部流程', score: 10 },
-                            { text: '间接沟通', score: 0, advice: '建议 AI + 人工兜底，保证体验。' },
-                            { text: '经常直接沟通', score: -10, advice: '与客户沟通频繁的，建议AI辅助话术。' }
+                            { text: '否，完全内部流程', percent: 100 },
+                            { text: '间接沟通', percent: 30, advice: '建议 AI + 人工兜底，保证体验。' },
+                            { text: '经常直接沟通', percent: -30, advice: '与客户沟通频繁的，建议 AI 辅助话术。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '出错是否要承担法律或安全责任？',
                         example: '批准贷款、医疗诊断（高责任）',
                         tip: '责任越高，越需人工把关',
                         options: [
-                            { text: '几乎无风险', score: 10 },
-                            { text: '中等风险，可分担', score: 0, advice: 'AI可参与，但建议最终结果由人工审核。' },
-                            { text: '高风险，需负责', score: -15, advice: '强烈建议人工主导，AI 仅做参考。' }
+                            { text: '几乎无风险', percent: 100 },
+                            { text: '中等风险，可分担', percent: 30, advice: 'AI 可参与，但建议最终结果由人工审核。' },
+                            { text: '高风险，需负责', percent: -50, advice: '强烈建议人工主导，AI 仅做参考。' }
                         ]
                     },
                     {
+                        weight: 1,
                         text: '该工作的数量和频率是否大？',
                         example: '每天处理数百份订单（数量大；频率高） vs. 每月审核一次预算（数量少；频率低）',
-                        tip: '数量/频率越大，自动化带来的效益越明显',
+                        tip: '数量 / 频率越大，自动化带来的效益越明显',
                         options: [
-                            { text: '是，数量大且频繁', score: 15, advice: '高频任务更适合自动化，可提升效率。' },
-                            { text: '中等，可预期', score: 5 },
-                            { text: '少量或偶发', score: -5, advice: '低频任务自动化 ROI 可能较低，谨慎投入，人工使用AI工具组合完成。' }
+                            { text: '是，数量大且频繁', percent: 100, advice: '高频任务更适合自动化，可提升效率。' },
+                            { text: '中等，可预期', percent: 50 },
+                            { text: '少量或偶发', percent: -30, advice: '低频任务自动化 ROI 可能较低，谨慎投入，人工使用 AI 工具组合完成。' }
                         ]
                     },
-                    /* ---------- 10. 工作量大小 ---------- */
                     {
+                        weight: 1,
                         text: '该任务的总体工作量如何？',
                         example: '每天处理 1 000+ 订单（工作量大） vs. 每月偶尔手动调整一次报表（工作量小）',
                         tip: '工作量越大，自动化节省的人力成本和 ROI 越高',
                         options: [
-                            { text: '工作量非常大，全年持续高负荷', score: 15, advice: '高工作量任务适合优先自动化，节省人力。' },
-                            { text: '中等，可预期', score: 5 },
-                            { text: '很小或偶发', score: -5, advice: '工作量小，自动化投入产出比可能不高，需谨慎评估。' }
+                            { text: '工作量非常大，全年持续高负荷', percent: 100, advice: '高工作量任务适合优先自动化，节省人力。' },
+                            { text: '中等，可预期', percent: 50 },
+                            { text: '很小或偶发', percent: -30, advice: '工作量小，自动化投入产出比可能不高，需谨慎评估。' }
                         ]
                     },
-
-                    /* ---------- 11. 单次上下文长度（字数） ---------- */
                     {
-                        text: '单次需要处理的上下文/文本长度大约多少字？',
+                        weight: 1,
+                        text: '单次需要处理的上下文 / 文本长度大约多少字？',
                         example: '两三句话（< 500 字） vs. 一份 20 页技术规范（> 20000 字）',
                         tip: '上下文越短，模型推理速度和准确率通常更高；超长文本需要分段或摘要',
                         options: [
-                            { text: '少于 500 字', score: 10 },
-                            { text: '500–5000 字', score: 0, advice: '适合直接输入模型处理。' },
-                            { text: '超过 5000-20000 字', score: -10, advice: '超长文本需分段或做摘要，增加实现复杂度。' }
+                            { text: '少于 500 字', percent: 100 },
+                            { text: '500–5000 字', percent: 70, advice: '适合直接输入模型处理。' },
+                            { text: '超过 5000–20000 字', percent: -30, advice: '超长文本需分段或做摘要，增加实现复杂度。' }
                         ]
                     },
-
-                    /* ---------- 12. 是否涉及公司内部或敏感数据 ---------- */
                     {
+                        weight: 1,
                         text: '任务是否涉及公司内部或敏感数据？',
                         example: '公开新闻稿（无敏感） vs. 员工薪酬表（高度敏感）',
                         tip: '敏感数据处理需考虑隐私、合规及模型部署方式',
                         options: [
-                            { text: '完全无敏感/公开数据', score: 10 },
-                            { text: '含一般内部数据，保密等级中等', score: 5, advice: '需要优化数据接入方式，考虑脱敏处理。' },
-                            { text: '包含高度敏感数据（财务、个人隐私等）', score: -15, advice: '需优先评估安全合规，考虑私有化部署或脱敏处理。' }
+                            { text: '完全无敏感 / 公开数据', percent: 100 },
+                            { text: '含一般内部数据，保密等级中等', percent: 50, advice: '需要优化数据接入方式，考虑脱敏处理。' },
+                            { text: '包含高度敏感数据（财务、个人隐私等）', percent: -50, advice: '需优先评估安全合规，考虑私有化部署或脱敏处理。' }
                         ]
                     },
-
-                    /* ---------- 13. 文件类型复杂度 ---------- */
                     {
+                        weight: 1,
                         text: '主要处理的文件类型属于哪种？',
                         example: '纯文本或可复制 PDF（简单） vs. 扫描图像、视频（复杂）',
-                        tip: '纯文字最易处理；含图像/表格/多媒体通常需要 OCR 或多模态模型',
+                        tip: '纯文字最易处理；含图像 / 表格 / 多媒体通常需要 OCR 或多模态模型',
                         options: [
-                            { text: '纯文字或简单 Markdown', score: 10 },
-                            { text: '文字 + 简单表格/图片（可 OCR）', score: 0 },
-                            { text: '扫描件 / 复杂多媒体（视频、音频等）', score: -10, advice: '需引入 OCR/多模态技术，前期成本和技术门槛更高。' }
+                            { text: '纯文字或简单 Markdown', percent: 100 },
+                            { text: '文字 + 简单表格 / 图片（可 OCR）', percent: 50 },
+                            { text: '扫描件 / 复杂多媒体（视频、音频等）', percent: -50, advice: '需引入 OCR / 多模态技术，前期成本和技术门槛更高。' }
                         ]
                     }
 
                 ],
 
-                /* ---------- 评分阈值 ---------- */
+                /* ---------- 评分阈值（基于 0–100 百分制） ---------- */
                 thresholds: [
-                    { min: 80, text: '👍 非常适合用 AI！', color: 'text-success', suggestion: `• 立即试用现成 AI 工具\n• 评估投入产出 (ROI)\n• 小范围试点再推广` },
-                    { min: 40, text: '🙂 适合用 AI 辅助', color: 'text-success', suggestion: `• 把“可自动化部分”拆出来\n• 小步快跑，保持人工复核\n• 持续跟踪效果` },
-                    { min: 0, text: '🤔 部分场景可尝试 AI', color: 'text-warning', suggestion: `• 选低风险子任务试水\n• 设定质量阈值，必要时人工兜底` },
-                    { min: -9999, text: '🙅‍♂️ 暂不建议用 AI', color: 'text-error', suggestion: `• 维持现有人工流程\n• 关注行业最新进展\n• 条件成熟后再评估` }
+                    {
+                        min: 80,
+                        text: '👍 非常适合用 AI！',
+                        color: 'text-success',
+                        suggestion: `• 立即选用市面成熟的 AI 工具或平台\n• 量化预期投入产出比 (ROI)，明确 KPI\n• 先在小范围内试点，验证效果后再全面推广`
+                    },
+                    {
+                        min: 40,
+                        text: '🙂 适合用 AI 辅助',
+                        color: 'text-success',
+                        suggestion: `• 拆解任务，把可自动化部分交给 AI\n• 保持人工复核，确保质量\n• 持续监测数据，迭代优化`
+                    },
+                    {
+                        min: 0,
+                        text: '🤔 部分场景可尝试 AI',
+                        color: 'text-warning',
+                        suggestion: `• 先选低风险、标准化子任务试水\n• 设定质量阈值，必要时人工兜底\n• 评估试点效果后再决定是否扩大范围`
+                    },
+                    {
+                        min: -9999,
+                        text: '🙅‍♂️ 暂不建议用 AI',
+                        color: 'text-error',
+                        suggestion: `• 维持现有人工流程\n• 关注行业最新进展\n• 条件成熟或工具更完善后再评估`
+                    }
                 ],
 
                 /* ---------- 状态数据 ---------- */
                 description: '',
-                answers: [],
+                answers: [], // 实际分值明细
                 selectedIdx: [],
                 advices: [],
                 evaluated: false,
@@ -418,7 +438,8 @@
 
                 /* ---------- 行为方法 ---------- */
                 setAnswer(qi, oi, opt) {
-                    this.answers[qi] = opt.score;
+                    const q = this.questions[qi];
+                    this.answers[qi] = (q.weight * opt.percent) / 100; // 将百分比转换为该题得分
                     this.selectedIdx[qi] = oi;
                     this.advices[qi] = opt.advice || '';
                     this.evaluated = false;
@@ -429,9 +450,11 @@
                 evaluate() {
                     if (!this.isAllAnswered) return;
                     this.totalScore = this.answers.reduce((sum, v) => sum + v, 0);
-                    const tier = this.thresholds.find((t) => this.totalScore >= t.min);
+                    const maxTotal = this.questions.reduce((sum, q) => sum + q.weight, 0);
+                    const percentScore = Math.max(0, Math.round((this.totalScore / maxTotal) * 100)); // 归一化到 0–100
+                    const tier = this.thresholds.find((t) => percentScore >= t.min);
                     if (tier) {
-                        this.resultText = `${tier.text}（总分：${this.totalScore}）`;
+                        this.resultText = `${tier.text}（得分：${percentScore} / 100）`;
                         this.resultColor = tier.color;
                         this.suggestion = tier.suggestion;
                     }
@@ -459,8 +482,9 @@
                     this.selectedIdx = sample.selectedIdx.slice();
                     this.advices = [];
                     sample.selectedIdx.forEach((oi, qi) => {
-                        const option = this.questions[qi].options[oi];
-                        this.answers[qi] = option.score;
+                        const q = this.questions[qi];
+                        const option = q.options[oi];
+                        this.answers[qi] = (q.weight * option.percent) / 100;
                         this.advices[qi] = option.advice || '';
                     });
                     // 更新进度 & 立即计算
